@@ -1,9 +1,8 @@
 package com.hh.service;
 
 import com.hh.bo.SubmitOrderBO;
-import com.hh.pojo.Carousel;
-
-import java.util.List;
+import com.hh.pojo.OrderStatus;
+import com.hh.vo.OrderVO;
 
 /**
  * @author HuangHao
@@ -12,7 +11,18 @@ import java.util.List;
 public interface OrderService {
 
 
-    public String createOrder(SubmitOrderBO submitOrderBO);
+    public OrderVO createOrder(SubmitOrderBO submitOrderBO);
+
+
+    public void updateOrderStatus(String orderId, Integer orderStatus);
+
+
+    public OrderStatus queryOrderStatusInfo(String orderId);
+
+    /**
+     * 关闭超时未支付的订单
+     */
+    public void closeOrder();
 
 
 
