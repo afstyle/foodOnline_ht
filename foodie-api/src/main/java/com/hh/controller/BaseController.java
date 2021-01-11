@@ -20,5 +20,7 @@ public class BaseController {
     public static final Integer COMMENT_PAGE_SIZE = 10;
     public static final Integer PAGE_SIZE = 20;
 
+    // 用户上传头像地址
+    public static final String IMAGE_USER_FACE_LOCATION = "D:\\test";
 
 }
