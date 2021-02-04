@@ -7,6 +7,7 @@ import com.hh.pojo.Users;
 import com.hh.resource.FileUpload;
 import com.hh.service.center.CenterUserService;
 import com.hh.utils.CookieUtils;
+import com.hh.utils.DateUtil;
 import com.hh.utils.JsonUtils;
 import com.hh.utils.Result;
 import io.swagger.annotations.Api;
@@ -68,7 +69,8 @@ public class CenterUserController extends BaseController {
 
     @ApiOperation(value = "修改用户头像", notes = "修改用户头像", httpMethod = "POST")
     @PostMapping("/uploadFace")
-    public Result uploadFace(@RequestParam String userId, MultipartFile file) {
+    public Result uploadFace(@RequestParam String userId, MultipartFile file,
+                             HttpServletRequest request, HttpServletResponse response) {
         // 头像保存地址
 //        String fileSpace = IMAGE_USER_FACE_LOCATION;
         String fileSpace = fileUpload.getImageUserFaceLocation();
@@ -88,11 +90,19 @@ public class CenterUserController extends BaseController {
                 String[] split = fileName.split("\\.");
                 String suffix = split[split.length - 1];
 
+                if (!suffix.equalsIgnoreCase("png") &&
+                        !suffix.equalsIgnoreCase("jpg") &&
+                        !suffix.equalsIgnoreCase("jpeg")) {
+                    return Result.errorMsg("图片格式不正确");
+                }
+
                 // face-{userid}.png
                 String newFileName = "face-" + userId + "-" + System.currentTimeMillis() +"." + suffix;
 
                 // 最终地址
                 String finalPath = fileSpace + uploadPathPrefix + File.separator + newFileName;
+
+                uploadPathPrefix += ("/" + newFileName);
 
                 File outFile = new File(finalPath);
                 if (outFile.getParentFile() != null) {
@@ -117,6 +127,20 @@ public class CenterUserController extends BaseController {
                 }
             }
         }
+
+        String imageServerUrl = fileUpload.getImageServerUrl();
+
+        // 加时间戳解决浏览器缓存
+        String finalUserFaceUrl = imageServerUrl + uploadPathPrefix.replaceAll("\\\\", "/") + "?t=" + DateUtil.getCurrentDateString(DateUtil.DATE_PATTERN);
+
+        // 更新头像地址到数据库
+        Users userResult = centerUserService.updateUserFace(userId, finalUserFaceUrl);
+
+        setNullProperty(userResult);
+
+        CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(userResult), -1, true);
+
+        // TODO 后续要改，增加令牌token，整合进redis，分布式会话
 
         return Result.ok();
     }
