@@ -11,6 +11,8 @@
 
     <artifactId>foodie-api</artifactId>
 
+    <packaging>war</packaging>
+
     <dependencies>
 
         <dependency>
@@ -25,6 +27,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- 打包成war 添加依赖
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>-->
     </dependencies>
 
 

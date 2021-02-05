@@ -19,7 +19,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/META-INF/resources/") // 映射swagger2
-                .addResourceLocations("file:D:\\test\\"); // 映射本地静态资源 "file:"为固定开头
+//                .addResourceLocations("file:D:\\test\\"); // 映射本地静态资源 "file:"为固定开头
+                .addResourceLocations("file:/home/pics"); // 映射本地静态资源 "file:"为固定开头
     }
 
     @Bean
