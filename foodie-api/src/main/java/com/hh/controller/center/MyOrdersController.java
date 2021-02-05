@@ -6,6 +6,7 @@ import com.hh.service.OrderService;
 import com.hh.service.center.MyOrdersService;
 import com.hh.utils.PagedGridResult;
 import com.hh.utils.Result;
+import com.hh.vo.OrderStatusCountsVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
@@ -20,8 +21,6 @@ public class MyOrdersController extends BaseController {
 
     @Autowired
     private MyOrdersService myOrdersService;
-    @Autowired
-    private OrderService orderService;
 
 
     @ApiOperation(value = "查询订单列表", notes = "查询订单列表", httpMethod = "POST")
@@ -96,13 +95,38 @@ public class MyOrdersController extends BaseController {
         return Result.ok();
     }
 
-
-    private Result checkUserOrder(String userId, String orderId) {
-        Orders orders = myOrdersService.queryMyOrder(userId, orderId);
-        if (orders == null) {
-            Result.errorMsg("订单不存在");
+    @ApiOperation(value = "订单状态总数统计", notes = "订单状态总数统计", httpMethod = "POST")
+    @PostMapping("/statusCounts")
+    public Result statusCounts(@RequestParam String userId) {
+        if (StringUtils.isBlank(userId)) {
+            return Result.errorMsg("");
         }
-        return Result.ok();
+
+        OrderStatusCountsVO orderStatusCounts = myOrdersService.getOrderStatusCounts(userId);
+
+        return Result.ok(orderStatusCounts);
     }
+
+    @ApiOperation(value = "trend", notes = "trend", httpMethod = "POST")
+    @PostMapping("/trend")
+    public Result trend(@RequestParam String userId,
+                        @RequestParam Integer page, @RequestParam Integer pageSize) {
+        if (StringUtils.isBlank(userId)) {
+            return Result.errorMsg("");
+        }
+        if (page == null) {
+            page = 1;
+        }
+        if (pageSize == null) {
+            pageSize = COMMENT_PAGE_SIZE;
+        }
+
+        PagedGridResult result = myOrdersService.getOrdersTrend(userId, page, pageSize);
+
+        return Result.ok(result);
+    }
+
+
+
 
 }

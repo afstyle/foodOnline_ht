@@ -2,6 +2,7 @@ package com.hh.service.center;
 
 import com.hh.pojo.Orders;
 import com.hh.utils.PagedGridResult;
+import com.hh.vo.OrderStatusCountsVO;
 
 /**
  * @author HuangHao
@@ -26,4 +27,19 @@ public interface MyOrdersService {
     public boolean updateReceiveOrderStatus(String orderId);
 
     public boolean deleteOrder(String userId, String orderId);
+
+    /**
+     * 查询用户订单数
+     * @param userId
+     */
+    public OrderStatusCountsVO getOrderStatusCounts(String userId);
+
+    /**
+     * 获得分页的订单动向
+     * @param userId
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    public PagedGridResult getOrdersTrend(String userId, Integer page, Integer pageSize);
 }

@@ -1,5 +1,9 @@
 package com.hh.controller;
 
+import com.hh.pojo.Orders;
+import com.hh.service.center.MyOrdersService;
+import com.hh.utils.Result;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -13,6 +17,7 @@ public class BaseController {
 
     public static final String SHOPCART = "shopcart";
 
+    // 支付相关
     public static final String PAY_RETURN_URL = "http://localhost:8088/orders/notifyMerchantOrderPaid";
     public static final String PAYMENT_URL = "http://payment.t.mukewang.com/foodie-payment/payment/createMerchantOrder";
 
@@ -23,4 +28,15 @@ public class BaseController {
     // 用户上传头像地址
     public static final String IMAGE_USER_FACE_LOCATION = "D:\\test";
 
+
+    @Autowired
+    private MyOrdersService myOrdersService;
+
+    public Result checkUserOrder(String userId, String orderId) {
+        Orders orders = myOrdersService.queryMyOrder(userId, orderId);
+        if (orders == null) {
+            Result.errorMsg("订单不存在");
+        }
+        return Result.ok(orders);
+    }
 }

@@ -17,10 +17,8 @@ import java.util.Date;
 public class CenterUserServiceImpl implements CenterUserService {
 
     @Autowired
-    public UsersMapper usersMapper;
+    private UsersMapper usersMapper;
 
-    @Autowired
-    private Sid sid;
 
     @Transactional(propagation = Propagation.SUPPORTS)
     @Override
