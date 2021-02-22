@@ -1,8 +1,11 @@
 package com.hh.service;
 
+import com.hh.bo.ShopcartBO;
 import com.hh.bo.SubmitOrderBO;
 import com.hh.pojo.OrderStatus;
 import com.hh.vo.OrderVO;
+
+import java.util.List;
 
 /**
  * @author HuangHao
@@ -11,7 +14,7 @@ import com.hh.vo.OrderVO;
 public interface OrderService {
 
 
-    public OrderVO createOrder(SubmitOrderBO submitOrderBO);
+    public OrderVO createOrder(List<ShopcartBO> shopcartList, SubmitOrderBO submitOrderBO);
 
 
     public void updateOrderStatus(String orderId, Integer orderStatus);

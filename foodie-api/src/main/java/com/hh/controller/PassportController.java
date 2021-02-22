@@ -1,10 +1,12 @@
 package com.hh.controller;
 
+import com.hh.bo.ShopcartBO;
 import com.hh.bo.UserBO;
 import com.hh.pojo.Users;
 import com.hh.service.UserService;
 import com.hh.utils.CookieUtils;
 import com.hh.utils.JsonUtils;
+import com.hh.utils.RedisOperator;
 import com.hh.utils.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -15,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author HuangHao
@@ -23,10 +27,13 @@ import javax.servlet.http.HttpServletResponse;
 @Api(value = "注册登录", tags = {"用于注册登录的相关接口"})
 @RestController
 @RequestMapping("passport")
-public class PassportController {
+public class PassportController extends BaseController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private RedisOperator redisOperator;
 
 
     @ApiOperation(value = "用户名是否已存在", notes = "用户名是否已存在", httpMethod = "GET")
@@ -81,7 +88,8 @@ public class PassportController {
         CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(users), -1, true);
 
         // TODO 生成用户token，存入redis会话
-        // TODO 同步购物车数据
+        // 同步购物车数据
+        syncShopcartData(users.getId(), request, response);
 
         return Result.ok(users);
     }
@@ -111,9 +119,45 @@ public class PassportController {
         CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(users), -1, true);
 
         // TODO 生成用户token，存入redis会话
-        // TODO 同步购物车数据
+        // 同步购物车数据
+        syncShopcartData(users.getId(), request, response);
 
         return Result.ok(users);
+    }
+
+    private void syncShopcartData(String userId, HttpServletRequest request, HttpServletResponse response) {
+
+        String redisKeyName = SHOPCART + ":" + userId;
+
+        String shopcartRedis = redisOperator.get(redisKeyName);
+        String shopcartCookie = CookieUtils.getCookieValue(request, SHOPCART, true);
+        if (StringUtils.isBlank(shopcartRedis)) {
+            if (StringUtils.isNotBlank(shopcartCookie)) {
+                redisOperator.set(redisKeyName, shopcartCookie);
+            }
+        } else {
+            if (StringUtils.isBlank(shopcartCookie)) {
+                CookieUtils.setCookie(request, response, SHOPCART, shopcartRedis, true);
+            } else {
+                List<ShopcartBO> redisList = JsonUtils.jsonToList(shopcartRedis, ShopcartBO.class);
+                List<ShopcartBO> cookieList = JsonUtils.jsonToList(shopcartCookie, ShopcartBO.class);
+                List<ShopcartBO> pengdingDeleteList = new ArrayList<>();
+                for (ShopcartBO redisItem : redisList) {
+                    for (ShopcartBO cookieItem : cookieList) {
+                        if (redisItem.getSpecId().equals(cookieItem.getSpecId())) {
+                            redisItem.setBuyCounts(cookieItem.getBuyCounts());
+                            pengdingDeleteList.add(cookieItem);
+                        }
+                    }
+                }
+                cookieList.removeAll(pengdingDeleteList);
+                redisList.addAll(cookieList);
+
+                redisOperator.set(redisKeyName, JsonUtils.objectToJson(redisList));
+                CookieUtils.setCookie(request, response, SHOPCART, JsonUtils.objectToJson(redisList), true);
+            }
+        }
+
     }
 
 
@@ -137,6 +181,8 @@ public class PassportController {
 
         // 清除用户相关信息的cookie
         CookieUtils.deleteCookie(request, response, "user");
+
+        CookieUtils.deleteCookie(request, response, SHOPCART);
 
         return Result.ok();
     }

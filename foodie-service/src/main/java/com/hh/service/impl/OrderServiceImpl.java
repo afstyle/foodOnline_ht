@@ -1,5 +1,6 @@
 package com.hh.service.impl;
 
+import com.hh.bo.ShopcartBO;
 import com.hh.bo.SubmitOrderBO;
 import com.hh.enums.OrderStatusEnum;
 import com.hh.enums.YesOrNo;
@@ -12,9 +13,13 @@ import com.hh.service.AddressService;
 import com.hh.service.CarouselService;
 import com.hh.service.ItemService;
 import com.hh.service.OrderService;
+import com.hh.service.impl.center.BaseService;
 import com.hh.utils.DateUtil;
+import com.hh.utils.JsonUtils;
+import com.hh.utils.RedisOperator;
 import com.hh.vo.MerchantOrdersVO;
 import com.hh.vo.OrderVO;
+import org.apache.commons.lang3.StringUtils;
 import org.n3r.idworker.Sid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +27,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -44,11 +50,13 @@ public class OrderServiceImpl implements OrderService {
     private ItemService itemService;
     @Autowired
     private Sid sid;
+    @Autowired
+    private RedisOperator redisOperator;
 
 
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    public OrderVO createOrder(SubmitOrderBO submitOrderBO) {
+    public OrderVO createOrder(List<ShopcartBO> shopcartList, SubmitOrderBO submitOrderBO) {
 
         String userId = submitOrderBO.getUserId();
         String addressId = submitOrderBO.getAddressId();
@@ -84,8 +92,11 @@ public class OrderServiceImpl implements OrderService {
         String[] itemSpecIdArr = itemSpecIds.split(",");
         Integer totalAmount = 0;
         Integer realPayamount = 0;
+        List<ShopcartBO> toRemovedShopcartList = new ArrayList<>();
         for (String itemSpecId : itemSpecIdArr) {
-            int buyCounts = 1; // TODO 整合redis后，数量从redis中的购物车里获取
+            ShopcartBO cartItem = getBuyCountsFromShopcart(shopcartList, itemSpecId);
+            int buyCounts = cartItem.getBuyCounts(); // 整合redis后，数量从redis中的购物车里获取
+            toRemovedShopcartList.add(cartItem);
 
             ItemsSpec itemsSpec = itemService.queryItemsSpecById(itemSpecId);
             totalAmount += itemsSpec.getPriceNormal() * buyCounts;
@@ -133,8 +144,18 @@ public class OrderServiceImpl implements OrderService {
         OrderVO orderVO = new OrderVO();
         orderVO.setOrderId(orderId);
         orderVO.setMerchantOrdersVO(merchantOrdersVO);
+        orderVO.setToRemovedShopcartList(toRemovedShopcartList);
 
         return orderVO;
+    }
+
+    private ShopcartBO getBuyCountsFromShopcart(List<ShopcartBO> shopcartList, String specId) {
+        for (ShopcartBO bo : shopcartList) {
+            if (bo.getSpecId().equals(specId)) {
+                return bo;
+            }
+        }
+        return null;
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
