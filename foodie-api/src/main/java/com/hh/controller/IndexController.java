@@ -73,7 +73,7 @@ public class IndexController {
             list = JsonUtils.jsonToList(redisResult, Category.class);
         } else {
             list = categoryService.queryAllRootLevelCat();
-            redisOperator.set("category", JsonUtils.objectToJson(list));
+            redisOperator.set("category", JsonUtils.objectToJson(list), 6 * 60 * 60 );
         }
 
         return Result.ok(list);
@@ -89,7 +89,7 @@ public class IndexController {
             return Result.errorMsg("");
         }
 
-        String redisResult = redisOperator.hget("subCategory", rootCatId + "");
+        String redisResult = redisOperator.get("subCat:" + rootCatId);
 
         List<CategoryVO> list = new ArrayList<>();
 
@@ -97,7 +97,7 @@ public class IndexController {
             list = JsonUtils.jsonToList(redisResult, CategoryVO.class);
         } else {
             list = categoryService.getSubCatList(rootCatId);
-            redisOperator.hset("subCategory", rootCatId + "", JsonUtils.objectToJson(list));
+            redisOperator.set("subCat" + rootCatId, JsonUtils.objectToJson(list), 5 * 60);
         }
         return Result.ok(list);
     }

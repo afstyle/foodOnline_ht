@@ -7,10 +7,21 @@ spring:
     url: jdbc:mysql://localhost:3306/foodie-shop?useUnicode=true&characterEncoding=UTF-8&autoReconnect&useSSL=false
     password: 123456
   redis:
+    # Redis单机实例
     host: 81.69.251.187
     port: 6379
     password: huanghao666
     database: 1
+    # Redis哨兵模式 （一主二从）
+#    database: 1
+#    password: huanghao666
+#    sentinel:
+#      master: hao-master
+#      nodes: 192.168.1.191:26379,192.168.1.192:26379,192.168.1.193:26379
+    # Redis集群模式
+#    password: huanghao666
+#    cluster:
+#      nodes: 192.168.1.191:6379,192.168.1.192:6379,192.168.1.193:6379,192.168.1.194:6379,192.168.1.195:6379,192.168.1.196:6379
 
 mybatis:
   configuration:
