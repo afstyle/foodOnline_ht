@@ -10,6 +10,7 @@ import com.hh.utils.CookieUtils;
 import com.hh.utils.DateUtil;
 import com.hh.utils.JsonUtils;
 import com.hh.utils.Result;
+import com.hh.vo.UsersVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.io.IOUtils;
@@ -58,11 +59,14 @@ public class CenterUserController extends BaseController {
         }
 
         Users userResult = centerUserService.updateUserInfo(userId, centerUserBO);
-        setNullProperty(userResult);
+//        setNullProperty(userResult);
 
-        CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(userResult), -1, true);
+        // 增加令牌token，整合进redis，分布式会话
+        UsersVO usersVO = conventUserVO(userResult);
 
-        // TODO 后续要改，增加令牌token，整合进redis，分布式会话
+        CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(usersVO), true);
+
+
 
         return Result.ok();
     }
@@ -135,12 +139,12 @@ public class CenterUserController extends BaseController {
 
         // 更新头像地址到数据库
         Users userResult = centerUserService.updateUserFace(userId, finalUserFaceUrl);
+//        setNullProperty(userResult);
 
-        setNullProperty(userResult);
+        UsersVO usersVO = conventUserVO(userResult);
 
-        CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(userResult), -1, true);
+        CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(usersVO), true);
 
-        // TODO 后续要改，增加令牌token，整合进redis，分布式会话
 
         return Result.ok();
     }

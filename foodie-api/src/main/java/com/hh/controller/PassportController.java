@@ -8,9 +8,11 @@ import com.hh.utils.CookieUtils;
 import com.hh.utils.JsonUtils;
 import com.hh.utils.RedisOperator;
 import com.hh.utils.Result;
+import com.hh.vo.UsersVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author HuangHao
@@ -83,11 +86,11 @@ public class PassportController extends BaseController {
 
         Users users = userService.createUser(userBO);
 
-        setNullProperty(users);
 
-        CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(users), -1, true);
+        UsersVO usersVO = conventUserVO(users);
 
-        // TODO 生成用户token，存入redis会话
+        CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(usersVO), true);
+
         // 同步购物车数据
         syncShopcartData(users.getId(), request, response);
 
@@ -114,11 +117,11 @@ public class PassportController extends BaseController {
             return Result.errorMsg("用户名或密码错误");
         }
 
-        setNullProperty(users);
+//        setNullProperty(users);
+        UsersVO usersVO = conventUserVO(users);
 
-        CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(users), -1, true);
+        CookieUtils.setCookie(request, response, "user", JsonUtils.objectToJson(usersVO), true);
 
-        // TODO 生成用户token，存入redis会话
         // 同步购物车数据
         syncShopcartData(users.getId(), request, response);
 
@@ -181,6 +184,8 @@ public class PassportController extends BaseController {
 
         // 清除用户相关信息的cookie
         CookieUtils.deleteCookie(request, response, "user");
+
+        redisOperator.del(REDIS_USER_TOKEN + ":" + userId);
 
         CookieUtils.deleteCookie(request, response, SHOPCART);
 
